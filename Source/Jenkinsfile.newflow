@@ -5,7 +5,7 @@ def runTestsInDocker(container, containerParams, testFolder, envParams, testResu
 	container.inside(containerParams) {
 		try {
 	          withEnv(envParams) {
-	            sh "dotnet test ${testFolder}/PayPal.Core.SDK.NETCore.Tests.csproj --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" -r ${testResultFolderName} /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
+	            sh "dotnet test ${testFolder}/PayPal.Core.SDK.NETCore.Tests.csproj --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" -r TestResults /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
 	          }
 	        }
 		catch (Exception ex) {
@@ -42,7 +42,7 @@ node{
   }
 
   def buildDockerContainer
-  def testResultFolderName='Source/TestResults'
+  def testResultFolderName='Source/UnitTests/TestResults'
   stage ('Build') {
       buildDockerContainer = docker.build("build:${revision}", '--no-cache -f Source/Dockerfile.newflow .')
       sh "mkdir ${testResultFolderName}"
