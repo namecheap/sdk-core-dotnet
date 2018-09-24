@@ -2,6 +2,9 @@ using System.Configuration;
 
 namespace PayPal.Manager
 {
+    /// <summary>
+    /// Custom handler for SDK configuration section as defined in configuration files
+    /// </summary>
     public interface IAccount
     {
         /// <summary>
@@ -46,6 +49,9 @@ namespace PayPal.Manager
     }
 
 #if NETSTANDARD || NETSTANDARD2_0
+    /// <summary>
+    /// Custom handler for SDK configuration section as defined in configuration files
+    /// </summary>
     public class Account : IAccount
     {
         /// <summary>
