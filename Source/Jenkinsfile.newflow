@@ -14,11 +14,11 @@ def getDeployJobName(branch) {
     }
 }
 
-def runTestsInDocker(container, containerParams, testFolderMask, envParams, testResultFolderName, onFail) {
+def runTestsInDocker(container, containerParams, testFolder, envParams, testResultFolderName, onFail) {
 	
 	try {
           withEnv(envParams) {
-            sh "dotnet test UnitTests\PayPal.Core.SDK.NETCore.Tests.csproj --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" -r TestResults /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
+            sh "dotnet test ${testFolder}/PayPal.Core.SDK.NETCore.Tests.csproj --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" -r TestResults /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
           }
         }
 	catch (Exception ex) {
@@ -27,8 +27,8 @@ def runTestsInDocker(container, containerParams, testFolderMask, envParams, test
 	}
         finally {
           // due to MSTestPublisher work incorrectly with docker agent folder we have to copy it into current dir
-          sh "cp TestResults/unittestresults.trx ./${testResultFolderName}/${testFolder}.unittestresults.trx || echo \"Absent file TestResults/unittestresults.trx\""
-          sh "cp TestResults/coverage.cobertura.xml ./TestResults/netcore.coverage.xml || echo \"Absent file TestResults/coverage.cobertura.xml\""
+          sh "cp ${testResultFolderName}/unittestresults.trx ./${testResultFolderName}/netcore.unittestresults.trx || echo \"Absent file ${testResultFolderName}/unittestresults.trx\""
+          sh "cp ${testResultFolderName}/coverage.cobertura.xml ./${testResultFolderName}/netcore.coverage.xml || echo \"Absent file ${testResultFolderName}/coverage.cobertura.xml\""
         }
 }
 
@@ -77,7 +77,7 @@ node('NCPay') {
   }
 
   stage ('Run Unit Tests') {
-    runTestsInDocker(buildDockerContainer, '', '.UnitTests', [], testResultFolderName, { publishTestArtifacts() })
+    runTestsInDocker(buildDockerContainer, '', 'UnitTests', [], testResultFolderName, { publishTestArtifacts() })
   }
 
   stage ('Publish Test Artifacts') {
