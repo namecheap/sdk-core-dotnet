@@ -1,12 +1,5 @@
 #!/usr/bin/env groovy
 
-def getDirectory(baseFolder, mask) { 
-  sh(returnStdout: true, script: "ls ${baseFolder}/ -D1")
-    .trim()
-    .split('\n')
-    .collect { it.trim() }
-    .findAll { it.endsWith(mask) }
-}
 
 def getBuildId() {
   String.format('%04d', env.BUILD_ID as Integer)
@@ -21,34 +14,22 @@ def getDeployJobName(branch) {
     }
 }
 
-def runTestsInDockerInParallel(container, containerParams, testFolderMask, envParams, testResultFolderName, onFail) {
-  def rootTestsFolder = '/src/tests'
-  container.inside(containerParams) {
-    def testFolders = getDirectory(rootTestsFolder, testFolderMask)
-    def tests = [:]
-    testFolders.each { testFolder -> 
-      tests[testFolder] = {
-        try {
+def runTestsInDocker(container, containerParams, testFolderMask, envParams, testResultFolderName, onFail) {
+	
+	try {
           withEnv(envParams) {
-            sh "dotnet test --no-build --no-restore --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura ${rootTestsFolder}/${testFolder}"
+            sh "dotnet test UnitTests\PayPal.Core.SDK.NETCore.Tests.csproj --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" -r TestResults /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
           }
         }
+	catch (Exception ex) {
+		onFail() 
+		throw ex
+	}
         finally {
           // due to MSTestPublisher work incorrectly with docker agent folder we have to copy it into current dir
-          sh "cp ${rootTestsFolder}/${testFolder}/TestResults/unittestresults.trx ./${testResultFolderName}/${testFolder}.unittestresults.trx || echo \"Absent file ${rootTestsFolder}/${testFolder}/TestResults/unittestresults.trx\""
-          sh "cp ${rootTestsFolder}/${testFolder}/coverage.cobertura.xml ./${testResultFolderName}/${testFolder}.coverage.xml || echo \"Absent file ${rootTestsFolder}/${testFolder}/coverage.cobertura.xml\""
+          sh "cp TestResults/unittestresults.trx ./${testResultFolderName}/${testFolder}.unittestresults.trx || echo \"Absent file TestResults/unittestresults.trx\""
+          sh "cp TestResults/coverage.cobertura.xml ./TestResults/netcore.coverage.xml || echo \"Absent file TestResults/coverage.cobertura.xml\""
         }
-      }
-    }
-    
-    try {
-      parallel tests
-    }
-    catch (Exception ex) {
-      onFail() 
-      throw ex
-    }
-  }
 }
 
 def publishTestArtifacts() 
@@ -62,7 +43,7 @@ def publishTestArtifacts()
   step([$class: 'MSTestPublisher', testResultsFile:"**/*.trx", failOnError: true, keepLongStdio: true])
 }
 
-node('PayPalSDK') {
+node('NCPay') {
   def tagName
   def revision
   def branch
@@ -96,7 +77,7 @@ node('PayPalSDK') {
   }
 
   stage ('Run Unit Tests') {
-    runTestsInDockerInParallel(buildDockerContainer, '', '.UnitTests', [], testResultFolderName, { publishTestArtifacts() })
+    runTestsInDocker(buildDockerContainer, '', '.UnitTests', [], testResultFolderName, { publishTestArtifacts() })
   }
 
   stage ('Publish Test Artifacts') {
