@@ -41,7 +41,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="echo Copying certificate to unit test output directory...&#xD;&#xA;xcopy &quot;$(ProjectDir)Resources\sdk-cert.p12&quot; &quot;$(OutDir)&quot; /Y /Q" />
+    <Exec Command="echo Copying certificate to unit test output directory...&#xD;&#xA;xcopy &quot;$(ProjectDir)Resources\sdk-cert.p12&quot; &quot;$(TargetDir)&quot; /Y /Q" />
   </Target>
 
 </Project>
