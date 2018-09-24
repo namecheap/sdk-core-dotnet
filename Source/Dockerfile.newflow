@@ -1,0 +1,7 @@
+FROM nc-mss-app-docker.artifactory.corp.namecheap.net/nc/ncpl/ncpl-build:dotnet2.1
+
+WORKDIR /
+
+COPY . .
+
+RUN dotnet build SDK\PayPal.Core.SDK.NETCore.csproj -c Release

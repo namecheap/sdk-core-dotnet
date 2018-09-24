@@ -16,7 +16,7 @@ SET SCRIPT_ROOT=%CD%
 %DEVENV% PayPal.Core.SDK.NET40.sln /build Release
 %DEVENV% PayPal.Core.SDK.NET45.sln /build Release
 %DEVENV% PayPal.Core.SDK.NET451.sln /build Release
-%DOTNET% build SDK\PayPal.Core.SDK.NETStandard2.0.csproj -c Release
+%DOTNET% build SDK\PayPal.Core.SDK.NETCore.csproj -c Release
 
 IF NOT EXIST TestResults MKDIR TestResults
 DEL TestResults\results_net*.xml
@@ -28,7 +28,7 @@ SET TEST_DLL=PayPalCoreSDK.Tests.dll
 %MSTEST% /testcontainer:UnitTests\bin\Release\net40\%TEST_DLL% /resultsfile:TestResults\results_net40.xml
 %MSTEST% /testcontainer:UnitTests\bin\Release\net45\%TEST_DLL% /resultsfile:TestResults\results_net45.xml
 %MSTEST% /testcontainer:UnitTests\bin\Release\net451\%TEST_DLL% /resultsfile:TestResults\results_net451.xml
-%DOTNET% test UnitTests\PayPal.Core.SDK.NETCore2.1.Tests.csproj --logger "trx;LogFileName=results_netcore21.xml" -r "%SCRIPT_ROOT%\TestResults"
+%DOTNET% test UnitTests\PayPal.Core.SDK.NETCore.Tests.csproj --logger "trx;LogFileName=results_netcore21.xml" -r "%SCRIPT_ROOT%\TestResults"
 GOTO :END
 
 :VS_NOT_FOUND

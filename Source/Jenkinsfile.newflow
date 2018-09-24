@@ -1,0 +1,106 @@
+#!/usr/bin/env groovy
+
+def getDirectory(baseFolder, mask) { 
+  sh(returnStdout: true, script: "ls ${baseFolder}/ -D1")
+    .trim()
+    .split('\n')
+    .collect { it.trim() }
+    .findAll { it.endsWith(mask) }
+}
+
+def getBuildId() {
+  String.format('%04d', env.BUILD_ID as Integer)
+}
+
+def getDeployJobName(branch) {
+    if(branch == 'master') {
+      "deploy-prod"
+    }
+    else {
+      "deploy"
+    }
+}
+
+def runTestsInDockerInParallel(container, containerParams, testFolderMask, envParams, testResultFolderName, onFail) {
+  def rootTestsFolder = '/src/tests'
+  container.inside(containerParams) {
+    def testFolders = getDirectory(rootTestsFolder, testFolderMask)
+    def tests = [:]
+    testFolders.each { testFolder -> 
+      tests[testFolder] = {
+        try {
+          withEnv(envParams) {
+            sh "dotnet test --no-build --no-restore --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura ${rootTestsFolder}/${testFolder}"
+          }
+        }
+        finally {
+          // due to MSTestPublisher work incorrectly with docker agent folder we have to copy it into current dir
+          sh "cp ${rootTestsFolder}/${testFolder}/TestResults/unittestresults.trx ./${testResultFolderName}/${testFolder}.unittestresults.trx || echo \"Absent file ${rootTestsFolder}/${testFolder}/TestResults/unittestresults.trx\""
+          sh "cp ${rootTestsFolder}/${testFolder}/coverage.cobertura.xml ./${testResultFolderName}/${testFolder}.coverage.xml || echo \"Absent file ${rootTestsFolder}/${testFolder}/coverage.cobertura.xml\""
+        }
+      }
+    }
+    
+    try {
+      parallel tests
+    }
+    catch (Exception ex) {
+      onFail() 
+      throw ex
+    }
+  }
+}
+
+def publishTestArtifacts() 
+{
+  step([$class: 'CoberturaPublisher',
+    coberturaReportFile: '**/*.coverage.xml',
+    maxNumberOfBuilds: 0,
+    onlyStable: false,
+    sourceEncoding: 'ASCII',
+    zoomCoverageChart: false])
+  step([$class: 'MSTestPublisher', testResultsFile:"**/*.trx", failOnError: true, keepLongStdio: true])
+}
+
+node('PayPalSDK') {
+  def tagName
+  def revision
+  def branch
+  def versionPrefix
+  stage('Checkout') {
+    deleteDir()
+
+    def scmVars = checkout scm
+    revision = scmVars.GIT_COMMIT
+
+    branch = scmVars.GIT_BRANCH
+    versionPrefix = sh(returnStdout: true, script: 'head -n 1 ./versionPrefix.txt').trim()
+
+    if(branch == 'master'){
+        sh "git tag ${versionPrefix}"
+        tagName = versionPrefix
+    }
+    else {
+        def formattedBuildId = getBuildId()
+        tagName = "${versionPrefix}-${branch.replaceAll('/', '-')}-${formattedBuildId}"
+    }
+
+    println tagName
+  }
+
+  def buildDockerContainer
+  def testResultFolderName='TestResults'
+  stage ('Build') {
+      buildDockerContainer = docker.build("build:${revision}", '--no-cache -f Dockerfile.newflow .')
+      sh "mkdir ${testResultFolderName}"
+  }
+
+  stage ('Run Unit Tests') {
+    runTestsInDockerInParallel(buildDockerContainer, '', '.UnitTests', [], testResultFolderName, { publishTestArtifacts() })
+  }
+
+  stage ('Publish Test Artifacts') {
+    publishTestArtifacts()
+  }
+
+}
