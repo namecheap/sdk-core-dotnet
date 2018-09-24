@@ -1,19 +1,6 @@
 #!/usr/bin/env groovy
 
 
-def getBuildId() {
-  String.format('%04d', env.BUILD_ID as Integer)
-}
-
-def getDeployJobName(branch) {
-    if(branch == 'master') {
-      "deploy-prod"
-    }
-    else {
-      "deploy"
-    }
-}
-
 def runTestsInDocker(container, containerParams, testFolder, envParams, testResultFolderName, onFail) {
 	
 	try {
@@ -44,29 +31,13 @@ def publishTestArtifacts()
 }
 
 node{
-  def tagName
   def revision
-  def branch
-  def versionPrefix
+ 
   stage('Checkout') {
     deleteDir()
 
     def scmVars = checkout scm
     revision = scmVars.GIT_COMMIT
-
-    branch = scmVars.GIT_BRANCH
-    versionPrefix = sh(returnStdout: true, script: 'head -n 1 ./versionPrefix.txt').trim()
-
-    if(branch == 'master'){
-        sh "git tag ${versionPrefix}"
-        tagName = versionPrefix
-    }
-    else {
-        def formattedBuildId = getBuildId()
-        tagName = "${versionPrefix}-${branch.replaceAll('/', '-')}-${formattedBuildId}"
-    }
-
-    println tagName
   }
 
   def buildDockerContainer
