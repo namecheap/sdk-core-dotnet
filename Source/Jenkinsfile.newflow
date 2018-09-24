@@ -43,7 +43,7 @@ def publishTestArtifacts()
   step([$class: 'MSTestPublisher', testResultsFile:"**/*.trx", failOnError: true, keepLongStdio: true])
 }
 
-node('NcPay') {
+node{
   def tagName
   def revision
   def branch
