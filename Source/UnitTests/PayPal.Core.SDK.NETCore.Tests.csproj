@@ -38,10 +38,10 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <ContentWithTargetPath Include="Resources/sdk-cert.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>sdk-cert.p12</TargetPath>
+    </ContentWithTargetPath>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="echo Copying certificate to unit test output directory...&#xD;&#xA;xcopy &quot;$(ProjectDir)Resources\sdk-cert.p12&quot; &quot;$(TargetDir)&quot; /Y /Q" />
-  </Target>
 
 </Project>
