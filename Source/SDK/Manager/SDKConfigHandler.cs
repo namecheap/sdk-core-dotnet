@@ -2,10 +2,52 @@ using System.Configuration;
 
 namespace PayPal.Manager
 {
-#if NETSTANDARD || NETSTANDARD2_0
-    public class Account
+    public interface IAccount
     {
+        /// <summary>
+        /// API Username
+        /// </summary>
+        string APIUserName { get; set; }
 
+        /// <summary>
+        /// API password
+        /// </summary>
+        string APIPassword { get; set; }
+
+        /// <summary>
+        /// Application Id
+        /// </summary>
+        string ApplicationId { get; set; }
+
+        /// <summary>
+        /// API signature
+        /// </summary>
+        string APISignature { get; set; }
+
+        /// <summary>
+        /// Client certificate for SSL authentication
+        /// </summary>
+        string APICertificate { get; set; }
+
+        /// <summary>
+        /// Private key password for SSL authentication
+        /// </summary>
+        string PrivateKeyPassword { get; set; }
+
+        /// <summary>
+        /// Signature Subject
+        /// </summary>
+        string SignatureSubject { get; set; }
+
+        /// <summary>
+        /// Certificate Subject
+        /// </summary>
+        string CertificateSubject { get; set; }
+    }
+
+#if NETSTANDARD || NETSTANDARD2_0
+    public class Account : IAccount
+    {
         /// <summary>
         /// API Username
         /// </summary>
@@ -119,7 +161,7 @@ namespace PayPal.Manager
     /// <summary>
     /// Class holds the <Account> element
     /// </summary>
-    public class Account : ConfigurationElement
+    public class Account : ConfigurationElement, IAccount
     {
         private static readonly ConfigurationProperty apiUserName =
             new ConfigurationProperty("apiUsername", typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);

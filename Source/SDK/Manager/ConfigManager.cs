@@ -66,12 +66,15 @@ namespace PayPal.Manager
         }
 
 #if NETSTANDARD || NETSTANDARD2_0
+
+        private readonly ConfigurationLoader _configurationLoader = new ConfigurationLoader();
+
         /// <summary>
         /// Private constructor
         /// </summary>
         private ConfigManager()
         {
-            LoadFromJsonFile("appsettings.json", false);
+            this.configValues  = _configurationLoader.LoadFromJsonFile("appsettings.json", false);
         }
 
         /// <summary>
@@ -80,96 +83,22 @@ namespace PayPal.Manager
         /// <param name="fileName">PayPal configuration file name</param>
         public void LoadFromJsonFile(string fileName)
         {
-            LoadFromJsonFile(fileName, true);
+            lock (syncRoot)
+            {
+                this.configValues = _configurationLoader.LoadFromJsonFile(fileName, true);
+            }
         }
 
-        private void LoadFromJsonFile(string fileName, bool verifyConfiguration)
+        /// <summary>
+        /// Loads settings from json file
+        /// </summary>
+        /// <param name="configurationRoot">Loaded configuration root</param>
+        public void LoadFromConfiguration(IConfigurationRoot configurationRoot)
         {
-            IConfigurationSection paypalConfigSection = null;
-
-            try
+            lock (syncRoot)
             {
-                var builder = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile(fileName);
-
-                var configuration = builder.Build();
-
-                paypalConfigSection = configuration.GetSection("paypal");
-            }
-            catch (System.Exception ex)
-            {
-                if (verifyConfiguration)
-                {
-                    throw new ConfigException($"Unable to load 'paypal' section from {fileName} file: " + ex.Message);
-                }
-
-                return;
-            }
-
-            if (paypalConfigSection == null)
-            {
-                if (verifyConfiguration)
-                {
-                    throw new ConfigException($"Cannot parse {fileName} file. Ensure you have configured the 'paypal' section correctly.");
-                }
-                
-                return;
-            }
-
-            this.configValues = new Dictionary<string, string>();
-
-            this.configValues = paypalConfigSection.GetSection("settings").GetChildren().ToDictionary(s => s.Key, s => s.Value);
-
-            var accountsCount = paypalConfigSection.GetSection("accounts").GetChildren().Count();
-
-            for (int index = 0; index < accountsCount; index++)
-            {
-                Account account = new Account
-                {
-                    APIUserName = paypalConfigSection[$"accounts:{index}:apiUserName"],
-                    APIPassword = paypalConfigSection[$"accounts:{index}:apiPassword"],
-                    ApplicationId = paypalConfigSection[$"accounts:{index}:applicationId"],
-                    APICertificate = paypalConfigSection[$"accounts:{index}:apiCertificate"],
-                    APISignature = paypalConfigSection[$"accounts:{index}:apiSignature"],
-                    PrivateKeyPassword = paypalConfigSection[$"accounts:{index}:privateKeyPassword"]
-                };
-
-                if (!string.IsNullOrEmpty(account.APIUserName))
-                {
-                    this.configValues.Add("account" + index + ".apiUsername", account.APIUserName);
-                }
-
-                if (!string.IsNullOrEmpty(account.APIPassword))
-                {
-                    this.configValues.Add("account" + index + ".apiPassword", account.APIPassword);
-                }
-
-                if (!string.IsNullOrEmpty(account.APISignature))
-                {
-                    this.configValues.Add("account" + index + ".apiSignature", account.APISignature);
-                }
-
-                if (!string.IsNullOrEmpty(account.APICertificate))
-                {
-                    this.configValues.Add("account" + index + ".apiCertificate", account.APICertificate);
-                }
-
-                if (!string.IsNullOrEmpty(account.PrivateKeyPassword))
-                {
-                    this.configValues.Add("account" + index + ".privateKeyPassword", account.PrivateKeyPassword);
-                }
-
-                if (!string.IsNullOrEmpty(account.CertificateSubject))
-                {
-                    this.configValues.Add("account" + index + ".subject", account.CertificateSubject);
-                }
-
-                if (!string.IsNullOrEmpty(account.ApplicationId))
-                {
-                    this.configValues.Add("account" + index + ".applicationId", account.ApplicationId);
-                }
-            }
+                this.configValues = _configurationLoader.LoadFromConfigurationRoot(configurationRoot);
+            }  
         }
 #else
         /// <summary>
@@ -231,7 +160,7 @@ namespace PayPal.Manager
                 if (!string.IsNullOrEmpty(account.ApplicationId))
                 {
                     this.configValues.Add("account" + index + ".applicationId", account.ApplicationId);
-                }
+                }               
                 index++;
             }
         }

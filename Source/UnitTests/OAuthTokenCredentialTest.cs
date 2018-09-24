@@ -123,7 +123,6 @@ namespace PayPal.Testing
         /// <returns>A base-64 encoded string containing the client credentials.</returns>
         private string ConvertClientCredentialsToBase64String(string clientId, string clientSecret)
         {
-#if NETCOREAPP || NETCOREAPP2_1
 
             try
             {
@@ -137,11 +136,6 @@ namespace PayPal.Testing
             {
                 throw e.InnerException;
             }
-#else
-
-            PrivateType oauthTokenCredential = new PrivateType(typeof(OAuthTokenCredential));
-            return oauthTokenCredential.InvokeStatic("ConvertClientCredentialsToBase64String", new string[] { clientId, clientSecret }) as string;
-#endif
         }
 #endif
         }

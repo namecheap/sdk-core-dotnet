@@ -138,11 +138,7 @@ namespace PayPal
                             }
                         }
 
-#if NETSTANDARD || NETSTANDARD2_0 || NET_4_5 || NET_4_5_1
-                        using (WebResponse responseWeb = httpRequest.GetResponseAsync().GetAwaiter().GetResult())
-#else
-                        using (WebResponse responseWeb = httpRequest.GetResponse())
-#endif
+                        using (WebResponse responseWeb = ExecuteRequest(httpRequest))
                         {
                             using (StreamReader readerStream = new StreamReader(responseWeb.GetResponseStream()))
                             {
@@ -213,6 +209,15 @@ namespace PayPal
             // If we've gotten this far, it means all attempts at sending the
             // request resulted in a failed attempt.
             throw new PayPalException("Retried " + retriesConfigured + " times.... Exception in PayPal.HttpConnection.Execute(). Check log for more details.");
+        }
+
+        private WebResponse ExecuteRequest(HttpWebRequest httpWebRequest)
+        {
+#if NETSTANDARD || NETSTANDARD2_0 || NET_4_5 || NET_4_5_1
+            return httpWebRequest.GetResponseAsync().GetAwaiter().GetResult();
+#else
+            return httpWebRequest.GetResponse();
+#endif
         }
     }
 }

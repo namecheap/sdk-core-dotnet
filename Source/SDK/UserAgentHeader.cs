@@ -180,10 +180,10 @@ namespace PayPal
                 return "4.5";
 #elif NET_4_5_1
                 return "4.5.1";
+#elif NETSTANDARD2_0
+                return "NETSTANDARD2_0";
 #elif NETSTANDARD
                 return "NETSTANDARD";
-#elif NETSTANDARD2_0
-                return "NETSTANDARD2.0";
 #endif
             }
         }

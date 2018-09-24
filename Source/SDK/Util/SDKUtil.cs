@@ -334,6 +334,7 @@ namespace PayPal.Util
 #endif
         }
 
+#if !NETSTANDARD && !NETSTANDARD2_0
         /// <summary>
         /// Gets the highest installed version of the .NET framework found on the system.
         /// </summary>
@@ -342,7 +343,7 @@ namespace PayPal.Util
         {
             Version highestNetVersion = null;
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+
             try
             {
                 // Opens the registry key for the .NET Framework entry.
@@ -398,8 +399,9 @@ namespace PayPal.Util
             }
             catch (System.Exception) { }
 
-#endif
+
             return highestNetVersion;
         }
+#endif
     }
 }

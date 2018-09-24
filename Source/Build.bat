@@ -3,7 +3,7 @@
 ECHO PayPal Core SDK for .NET
 ECHO ======================================
 
-SET VSTOOLS=%VS150PROCOMNTOOLS%
+SET VSTOOLS=%VS140COMNTOOLS%
 IF "%VSTOOLS%"=="" GOTO :VS_NOT_FOUND
 
 SET IDE_DIR=%VSTOOLS%\..\IDE
@@ -32,6 +32,6 @@ SET TEST_DLL=PayPalCoreSDK.Tests.dll
 GOTO :END
 
 :VS_NOT_FOUND
-ECHO Visual Studio 2017 was not found.
+ECHO Visual Studio 2015 was not found.
 
 :END
