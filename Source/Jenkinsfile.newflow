@@ -15,19 +15,19 @@ def runTestsInDocker(container, containerParams, testFolder, envParams, testResu
 	        finally {
 	          // due to MSTestPublisher work incorrectly with docker agent folder we have to copy it into current dir
 	          sh "cp ${testResultFolderName}/unittestresults.trx ./${testResultFolderName}/netcore.unittestresults.trx || echo \"Absent file ${testResultFolderName}/unittestresults.trx\""
-	          sh "cp ${testResultFolderName}/coverage.cobertura.xml ./${testResultFolderName}/netcore.coverage.xml || echo \"Absent file ${testResultFolderName}/coverage.cobertura.xml\""
+	          //sh "cp ${testResultFolderName}/coverage.cobertura.xml ./${testResultFolderName}/netcore.coverage.xml || echo \"Absent file ${testResultFolderName}/coverage.cobertura.xml\""
 	        }
 	}
 }
 
 def publishTestArtifacts() 
 {
-  step([$class: 'CoberturaPublisher',
-    coberturaReportFile: '**/*.coverage.xml',
-    maxNumberOfBuilds: 0,
-    onlyStable: false,
-    sourceEncoding: 'ASCII',
-    zoomCoverageChart: false])
+  //step([$class: 'CoberturaPublisher',
+  //  coberturaReportFile: '**/*.coverage.xml',
+  //  maxNumberOfBuilds: 0,
+  //  onlyStable: false,
+  //  sourceEncoding: 'ASCII',
+  //  zoomCoverageChart: false])
   step([$class: 'MSTestPublisher', testResultsFile:"**/*.trx", failOnError: true, keepLongStdio: true])
 }
 
