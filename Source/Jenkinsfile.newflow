@@ -2,21 +2,22 @@
 
 
 def runTestsInDocker(container, containerParams, testFolder, envParams, testResultFolderName, onFail) {
-	
-	try {
-          withEnv(envParams) {
-            sh "dotnet test ${testFolder}/PayPal.Core.SDK.NETCore.Tests.csproj --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" -r ${testResultFolderName} /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
-          }
-        }
-	catch (Exception ex) {
-		onFail() 
-		throw ex
+	container.inside(containerParams) {
+		try {
+	          withEnv(envParams) {
+	            sh "dotnet test ${testFolder}/PayPal.Core.SDK.NETCore.Tests.csproj --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" -r ${testResultFolderName} /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
+	          }
+	        }
+		catch (Exception ex) {
+			onFail() 
+			throw ex
+		}
+	        finally {
+	          // due to MSTestPublisher work incorrectly with docker agent folder we have to copy it into current dir
+	          sh "cp ${testResultFolderName}/unittestresults.trx ./${testResultFolderName}/netcore.unittestresults.trx || echo \"Absent file ${testResultFolderName}/unittestresults.trx\""
+	          sh "cp ${testResultFolderName}/coverage.cobertura.xml ./${testResultFolderName}/netcore.coverage.xml || echo \"Absent file ${testResultFolderName}/coverage.cobertura.xml\""
+	        }
 	}
-        finally {
-          // due to MSTestPublisher work incorrectly with docker agent folder we have to copy it into current dir
-          sh "cp ${testResultFolderName}/unittestresults.trx ./${testResultFolderName}/netcore.unittestresults.trx || echo \"Absent file ${testResultFolderName}/unittestresults.trx\""
-          sh "cp ${testResultFolderName}/coverage.cobertura.xml ./${testResultFolderName}/netcore.coverage.xml || echo \"Absent file ${testResultFolderName}/coverage.cobertura.xml\""
-        }
 }
 
 def publishTestArtifacts() 
