@@ -31,23 +31,30 @@ def publishTestArtifacts()
   step([$class: 'MSTestPublisher', testResultsFile:"**/*.trx", failOnError: true, keepLongStdio: true])
 }
 
+def getVersionSuffix(branchName)
+{
+  def buildNumber = env.BUILD_NUMBER
+  def lastChunk = branchName.substring(branchName.lastIndexOf("/") + 1)
+  def suffix = "${lastChunk}-${buildNumber}"
+  return suffix
+}
+
 node{
   def revision
-  def branchName
+  def versionSuffix
  
   stage('Checkout') {
     deleteDir()
 
     def scmVars = checkout scm
     revision = scmVars.GIT_COMMIT
-    branchName = scmVars.GIT_BRANCH
-    brabchName = branchName.replaceAll('/', '-')
+    versionSuffix = getVersionSuffix(scmVars.GIT_BRANCH)
   }
 
   def buildDockerContainer
   def testResultFolderName='Source/UnitTests/TestResults'
   stage ('Build') {
-      buildDockerContainer = docker.build("build:${revision}", '--no-cache --build-arg branch_name=${branchName} -f Source/Dockerfile.newflow .')
+      buildDockerContainer = docker.build("build:${revision}", "--no-cache --build-arg version_suffix=${versionSuffix} -f Source/Dockerfile.newflow .")
       sh "mkdir ${testResultFolderName}"
   }
 
@@ -61,7 +68,7 @@ node{
 
   stage ('Create NuGet package') {
 	buildDockerContainer.inside(''){
-		sh "dotnet pack Source/SDK/PayPal.Core.SDK.NETCore.csproj -c Release -o Package --version-suffix ${branchName}"
+		sh "dotnet pack Source/SDK/PayPal.Core.SDK.NETCore.csproj -c Release -o Package --version-suffix ${versionSuffix}"
 	}
   }
 
