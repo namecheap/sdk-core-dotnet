@@ -13,7 +13,27 @@ using Microsoft.Extensions.Configuration;
 
 
 namespace PayPal.Manager
-{    
+{
+
+    internal static class AccountFieldNames
+    {
+        public const string ApiUsername = "apiUsername";
+
+        public const string ApiPassword = "apiPassword";
+
+        public const string ApplicationId = "applicationId";
+
+        public const string ApiCertificate = "apiCertificate";
+
+        public const string ApiSignature = "apiSignature";
+
+        public const string PrivateKeyPassword = "privateKeyPassword";
+
+        public const string CertificateSubject = "certificateSubject";
+
+        public const string SignatureSubject = "signatureSubject";
+    }
+
     /// <summary>
     /// ConfigManager loads the configuration file and hands out appropriate parameters to application
     /// </summary>
@@ -133,34 +153,36 @@ namespace PayPal.Manager
             foreach (ConfigurationElement element in (ConfigurationElementCollection)paypalConfigSection.GetType().GetProperty("Accounts").GetValue(paypalConfigSection, null))
             {
                 Account account = (Account)element;
+                string keyPrefix = string.Format("account{0}.", index);
+
                 if (!string.IsNullOrEmpty(account.APIUserName))
                 {
-                    this.configValues.Add("account" + index + ".apiUsername", account.APIUserName);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.ApiUsername, account.APIUserName);
                 }
                 if (!string.IsNullOrEmpty(account.APIPassword))
                 {
-                    this.configValues.Add("account" + index + ".apiPassword", account.APIPassword);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.ApiPassword, account.APIPassword);
                 }
                 if (!string.IsNullOrEmpty(account.APISignature))
                 {
-                    this.configValues.Add("account" + index + ".apiSignature", account.APISignature);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.ApiSignature, account.APISignature);
                 }
                 if (!string.IsNullOrEmpty(account.APICertificate))
                 {
-                    this.configValues.Add("account" + index + ".apiCertificate", account.APICertificate);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.ApiCertificate, account.APICertificate);
                 }
                 if (!string.IsNullOrEmpty(account.PrivateKeyPassword))
                 {
-                    this.configValues.Add("account" + index + ".privateKeyPassword", account.PrivateKeyPassword);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.PrivateKeyPassword, account.PrivateKeyPassword);
                 }
                 if (!string.IsNullOrEmpty(account.CertificateSubject))
                 {
-                    this.configValues.Add("account" + index + ".subject", account.CertificateSubject);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.CertificateSubject, account.CertificateSubject);
                 }
                 if (!string.IsNullOrEmpty(account.ApplicationId))
                 {
-                    this.configValues.Add("account" + index + ".applicationId", account.ApplicationId);
-                }               
+                    this.configValues.Add(keyPrefix + AccountFieldNames.ApplicationId, account.ApplicationId);
+                }
                 index++;
             }
         }

@@ -11,7 +11,11 @@ namespace PayPal.Manager
     internal class ConfigurationLoader
     {
         private static readonly string[] AccountPropertyNames =
-            {"apiUsername", "apiPassword", "applicationId", "apiCertificate", "apiSignature", "privateKeyPassword"};
+        {
+            AccountFieldNames.ApiUsername, AccountFieldNames.ApiPassword, AccountFieldNames.ApplicationId,
+            AccountFieldNames.ApiCertificate, AccountFieldNames.ApiSignature, AccountFieldNames.PrivateKeyPassword,
+            AccountFieldNames.CertificateSubject, AccountFieldNames.SignatureSubject
+        };
 
         public Dictionary<string, string> LoadFromJsonFile(string fileName, bool throwExceptionIfNotLoaded)
         {

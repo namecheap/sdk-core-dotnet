@@ -72,4 +72,10 @@ node{
 	}
   }
 
+  stage ('Push NuGet package') {
+	buildDockerContainer.inside(''){
+		sh "dotnet nuget push Source/SDK/Package -s https://artifactory.corp.namecheap.net/artifactory/api/nuget/namecheap2"
+	}
+  }
+
 }
