@@ -4,4 +4,4 @@ WORKDIR /
 
 COPY . .
 
-RUN dotnet build Source/SDK/PayPal.Core.SDK.NETCore.csproj -c Release
+RUN dotnet build Source/SDK/PayPal.Core.SDK.NETCore.csproj -c Release --version-suffix "$branch_name"
