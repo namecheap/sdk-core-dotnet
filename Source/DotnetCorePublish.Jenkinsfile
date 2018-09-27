@@ -1,12 +1,11 @@
 #!/usr/bin/env groovy
 
-def runTestsInDocker(container, testFolder, testResultFolderName, onFail) {
+def runTestsInDocker(container, testFolder, testResultFolderName) {
 	container.inside('') {
 		try {
 	        sh "dotnet test ${testFolder}/PayPal.Core.SDK.NETCore.Tests.csproj --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" -r TestResults"
 	    }
 		catch (Exception ex) {
-			onFail() 
 			throw ex
 		}
 		finally {
@@ -46,7 +45,7 @@ node{
 	}
 
 	stage ('Run Unit Tests') {
-		runTestsInDocker(buildDockerContainer, '', 'Source/UnitTests', [], testResultFolderName, { publishTestArtifacts() })
+		runTestsInDocker(buildDockerContainer, 'Source/UnitTests', testResultFolderName)
 	}
 
 	stage ('Create NuGet package') {
