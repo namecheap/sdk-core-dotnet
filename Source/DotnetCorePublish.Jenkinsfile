@@ -41,7 +41,7 @@ node{
 	def testResultFolderName='Source/UnitTests/TestResults'
 	
 	stage ('Build') {
-		buildDockerContainer = docker.build("build:${revision}", "--no-cache --build-arg version_suffix=${versionSuffix} -f Source/Dockerfile.newflow .")
+		buildDockerContainer = docker.build("build:${revision}", "--no-cache --build-arg version_suffix=${versionSuffix} -f Source/NetCoreBuild.Dockerfile .")
 		sh "mkdir ${testResultFolderName}"
 	}
 
@@ -57,7 +57,7 @@ node{
 
 	//stage ('Push NuGet package') {
 	//	buildDockerContainer.inside(''){
-	//		sh "dotnet nuget push Source/SDK/Package -s https://artifactory.corp.namecheap.net/artifactory/api/nuget/namecheap2"
+	//		sh "dotnet nuget push Source/SDK/Package -s ${env.ARTIFACTORY_LINK}"
 	//	}
 	//}
 }
