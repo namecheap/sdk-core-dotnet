@@ -1,81 +1,63 @@
 #!/usr/bin/env groovy
 
-
-def runTestsInDocker(container, containerParams, testFolder, envParams, testResultFolderName, onFail) {
-	container.inside(containerParams) {
+def runTestsInDocker(container, testFolder, testResultFolderName, onFail) {
+	container.inside('') {
 		try {
-	          withEnv(envParams) {
-	            sh "dotnet test ${testFolder}/PayPal.Core.SDK.NETCore.Tests.csproj --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" -r TestResults /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
-	          }
-	        }
+	        sh "dotnet test ${testFolder}/PayPal.Core.SDK.NETCore.Tests.csproj --configuration Release --logger \"trx;LogFileName=unittestresults.trx\" -r TestResults"
+	    }
 		catch (Exception ex) {
 			onFail() 
 			throw ex
 		}
-	        finally {
-	          // due to MSTestPublisher work incorrectly with docker agent folder we have to copy it into current dir
-	          sh "cp ${testResultFolderName}/unittestresults.trx ./${testResultFolderName}/netcore.unittestresults.trx || echo \"Absent file ${testResultFolderName}/unittestresults.trx\""
-	          //sh "cp ${testResultFolderName}/coverage.cobertura.xml ./${testResultFolderName}/netcore.coverage.xml || echo \"Absent file ${testResultFolderName}/coverage.cobertura.xml\""
-	        }
+		finally {
+			// due to MSTestPublisher work incorrectly with docker agent folder we have to copy it into current dir
+			sh "cp ${testResultFolderName}/unittestresults.trx ./${testResultFolderName}/netcore.unittestresults.trx || echo \"Absent file ${testResultFolderName}/unittestresults.trx\""
+			step([$class: 'MSTestPublisher', testResultsFile:"**/*.trx", failOnError: true, keepLongStdio: true])
+		}
 	}
-}
-
-def publishTestArtifacts() 
-{
-  //step([$class: 'CoberturaPublisher',
-  //  coberturaReportFile: '**/*.coverage.xml',
-  //  maxNumberOfBuilds: 0,
-  //  onlyStable: false,
-  //  sourceEncoding: 'ASCII',
-  //  zoomCoverageChart: false])
-  step([$class: 'MSTestPublisher', testResultsFile:"**/*.trx", failOnError: true, keepLongStdio: true])
 }
 
 def getVersionSuffix(branchName)
 {
-  def buildNumber = env.BUILD_NUMBER
-  def lastChunk = branchName.substring(branchName.lastIndexOf("/") + 1)
-  def suffix = "${lastChunk}-${buildNumber}"
-  return suffix
+	def buildNumber = env.BUILD_NUMBER
+	def lastChunk = branchName.substring(branchName.lastIndexOf("/") + 1)
+	def suffix = "${lastChunk}-${buildNumber}"
+	return suffix
 }
 
 node{
-  def revision
-  def versionSuffix
- 
-  stage('Checkout') {
-    deleteDir()
+	def revision
+	def versionSuffix
 
-    def scmVars = checkout scm
-    revision = scmVars.GIT_COMMIT
-    versionSuffix = getVersionSuffix(scmVars.GIT_BRANCH)
-  }
+	stage('Checkout') {
+		deleteDir()
 
-  def buildDockerContainer
-  def testResultFolderName='Source/UnitTests/TestResults'
-  stage ('Build') {
-      buildDockerContainer = docker.build("build:${revision}", "--no-cache --build-arg version_suffix=${versionSuffix} -f Source/Dockerfile.newflow .")
-      sh "mkdir ${testResultFolderName}"
-  }
-
-  stage ('Run Unit Tests') {
-    runTestsInDocker(buildDockerContainer, '', 'Source/UnitTests', [], testResultFolderName, { publishTestArtifacts() })
-  }
-
-  stage ('Publish Test Artifacts') {
-    publishTestArtifacts()
-  }
-
-  stage ('Create NuGet package') {
-	buildDockerContainer.inside(''){
-		sh "dotnet pack Source/SDK/PayPal.Core.SDK.NETCore.csproj -c Release -o Package --version-suffix ${versionSuffix}"
+		def scmVars = checkout scm
+		revision = scmVars.GIT_COMMIT
+		versionSuffix = getVersionSuffix(scmVars.GIT_BRANCH)
 	}
-  }
 
-  //stage ('Push NuGet package') {
-  //	buildDockerContainer.inside(''){
-  //		sh "dotnet nuget push Source/SDK/Package -s https://artifactory.corp.namecheap.net/artifactory/api/nuget/namecheap2"
-  //	}
-  //}
+	def buildDockerContainer
+	def testResultFolderName='Source/UnitTests/TestResults'
+	
+	stage ('Build') {
+		buildDockerContainer = docker.build("build:${revision}", "--no-cache --build-arg version_suffix=${versionSuffix} -f Source/Dockerfile.newflow .")
+		sh "mkdir ${testResultFolderName}"
+	}
 
+	stage ('Run Unit Tests') {
+		runTestsInDocker(buildDockerContainer, '', 'Source/UnitTests', [], testResultFolderName, { publishTestArtifacts() })
+	}
+
+	stage ('Create NuGet package') {
+		buildDockerContainer.inside(''){
+			sh "dotnet pack Source/SDK/PayPal.Core.SDK.NETCore.csproj -c Release -o Package --version-suffix ${versionSuffix}"
+		}
+	}
+
+	//stage ('Push NuGet package') {
+	//	buildDockerContainer.inside(''){
+	//		sh "dotnet nuget push Source/SDK/Package -s https://artifactory.corp.namecheap.net/artifactory/api/nuget/namecheap2"
+	//	}
+	//}
 }
