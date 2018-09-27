@@ -56,7 +56,7 @@ node{
 
 	//stage ('Push NuGet package') {
 	//	buildDockerContainer.inside(''){
-	//		sh "dotnet nuget push Source/SDK/Package -s ${env.ARTIFACTORY_LINK}"
+	//		sh "dotnet nuget push Source/SDK/Package -s ${env.NUGET_REGISTRY_LINK}"
 	//	}
 	//}
 }
