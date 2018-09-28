@@ -16,15 +16,14 @@ def runTestsInDocker(container, testFolder, testResultFolderName) {
 	}
 }
 
-def getVersionSuffix(branchName)
-{
+def getVersionSuffix(branchName) {
 	def buildNumber = env.BUILD_NUMBER
 	def lastChunk = branchName.substring(branchName.lastIndexOf("/") + 1)
 	def suffix = "${lastChunk}-${buildNumber}"
 	return suffix
 }
 
-node{
+node {
 	def revision
 	def versionSuffix
 
