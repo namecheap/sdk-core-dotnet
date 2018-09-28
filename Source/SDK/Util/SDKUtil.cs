@@ -326,10 +326,15 @@ namespace PayPal.Util
         /// <returns>True if .NET 4.5 or later is detected; false otherwise.</returns>
         public static bool IsNet45OrLaterDetected()
         {
+#if NETSTANDARD && NETSTANDARD2_0
+            return true;
+#else
             var highestNetVersion = GetHighestInstalledNetVersion();
             return highestNetVersion == null ? false : highestNetVersion >= new Version(4, 5, 0, 0);
+#endif
         }
 
+#if !NETSTANDARD && !NETSTANDARD2_0
         /// <summary>
         /// Gets the highest installed version of the .NET framework found on the system.
         /// </summary>
@@ -337,6 +342,7 @@ namespace PayPal.Util
         private static Version GetHighestInstalledNetVersion()
         {
             Version highestNetVersion = null;
+
 
             try
             {
@@ -393,7 +399,9 @@ namespace PayPal.Util
             }
             catch (System.Exception) { }
 
+
             return highestNetVersion;
         }
+#endif
     }
 }

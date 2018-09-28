@@ -3,6 +3,100 @@ using System.Configuration;
 namespace PayPal.Manager
 {
     /// <summary>
+    /// Custom handler for SDK configuration section as defined in configuration files
+    /// </summary>
+    public interface IAccount
+    {
+        /// <summary>
+        /// API Username
+        /// </summary>
+        string APIUserName { get; set; }
+
+        /// <summary>
+        /// API password
+        /// </summary>
+        string APIPassword { get; set; }
+
+        /// <summary>
+        /// Application Id
+        /// </summary>
+        string ApplicationId { get; set; }
+
+        /// <summary>
+        /// API signature
+        /// </summary>
+        string APISignature { get; set; }
+
+        /// <summary>
+        /// Client certificate for SSL authentication
+        /// </summary>
+        string APICertificate { get; set; }
+
+        /// <summary>
+        /// Private key password for SSL authentication
+        /// </summary>
+        string PrivateKeyPassword { get; set; }
+
+        /// <summary>
+        /// Signature Subject
+        /// </summary>
+        string SignatureSubject { get; set; }
+
+        /// <summary>
+        /// Certificate Subject
+        /// </summary>
+        string CertificateSubject { get; set; }
+    }
+
+#if NETSTANDARD || NETSTANDARD2_0
+    /// <summary>
+    /// Custom handler for SDK configuration section as defined in configuration files
+    /// </summary>
+    public class Account : IAccount
+    {
+        /// <summary>
+        /// API Username
+        /// </summary>
+        public string APIUserName { get; set; }
+
+        /// <summary>
+        /// API password
+        /// </summary>
+        public string APIPassword { get; set; }
+
+        /// <summary>
+        /// Application Id
+        /// </summary>
+        public string ApplicationId { get; set; }
+
+        /// <summary>
+        /// API signature
+        /// </summary>
+        public string APISignature { get; set; }
+
+        /// <summary>
+        /// Client certificate for SSL authentication
+        /// </summary>
+        public string APICertificate { get; set; }
+
+        /// <summary>
+        /// Private key password for SSL authentication
+        /// </summary>
+        public string PrivateKeyPassword { get; set; }
+
+        /// <summary>
+        /// Signature Subject
+        /// </summary>
+        public string SignatureSubject { get; set; }
+
+        /// <summary>
+        /// Certificate Subject
+        /// </summary>
+        public string CertificateSubject { get; set; }
+    }
+#else
+
+    /// <summary>
     /// Custom handler for SDK configuration section as defined in App.Config or Web.Config files
     /// </summary>    
     public class SDKConfigHandler : ConfigurationSection
@@ -73,31 +167,31 @@ namespace PayPal.Manager
     /// <summary>
     /// Class holds the <Account> element
     /// </summary>
-    public class Account : ConfigurationElement
+    public class Account : ConfigurationElement, IAccount
     {
         private static readonly ConfigurationProperty apiUserName =
-            new ConfigurationProperty("apiUsername", typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
+            new ConfigurationProperty(AccountFieldNames.ApiUsername, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
 
         private static readonly ConfigurationProperty apiPassword =
-            new ConfigurationProperty("apiPassword", typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
+            new ConfigurationProperty(AccountFieldNames.ApiPassword, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
 
         private static readonly ConfigurationProperty appId =
-            new ConfigurationProperty("applicationId", typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
+            new ConfigurationProperty(AccountFieldNames.ApplicationId, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
 
         private static readonly ConfigurationProperty apiSignature =
-            new ConfigurationProperty("apiSignature", typeof(string), string.Empty);
+            new ConfigurationProperty(AccountFieldNames.ApiSignature, typeof(string), string.Empty);
 
         private static readonly ConfigurationProperty apiCertificate =
-            new ConfigurationProperty("apiCertificate", typeof(string), string.Empty);
+            new ConfigurationProperty(AccountFieldNames.ApiCertificate, typeof(string), string.Empty);
 
         private static readonly ConfigurationProperty privateKeyPassword =
-            new ConfigurationProperty("privateKeyPassword", typeof(string), string.Empty);
+            new ConfigurationProperty(AccountFieldNames.PrivateKeyPassword, typeof(string), string.Empty);
 
         private static readonly ConfigurationProperty signSubject =
-           new ConfigurationProperty("signatureSubject", typeof(string), string.Empty);
+           new ConfigurationProperty(AccountFieldNames.SignatureSubject, typeof(string), string.Empty);
 
         private static readonly ConfigurationProperty certifySubject =
-           new ConfigurationProperty("certificateSubject", typeof(string), string.Empty);
+           new ConfigurationProperty(AccountFieldNames.CertificateSubject, typeof(string), string.Empty);
 
         public Account()
         {
@@ -114,7 +208,7 @@ namespace PayPal.Manager
         /// <summary>
         /// API Username
         /// </summary>
-        [ConfigurationProperty("apiUsername", IsRequired = true)]
+        [ConfigurationProperty(AccountFieldNames.ApiUsername, IsRequired = true)]
         public string APIUserName
         {
             get { return (string)this[apiUserName]; }
@@ -124,7 +218,7 @@ namespace PayPal.Manager
         /// <summary>
         /// API password
         /// </summary>
-        [ConfigurationProperty("apiPassword", IsRequired = true)]
+        [ConfigurationProperty(AccountFieldNames.ApiPassword, IsRequired = true)]
         public string APIPassword
         {
             get { return (string)this[apiPassword]; }
@@ -134,7 +228,7 @@ namespace PayPal.Manager
         /// <summary>
         /// Application Id
         /// </summary>
-        [ConfigurationProperty("applicationId")]
+        [ConfigurationProperty(AccountFieldNames.ApplicationId)]
         public string ApplicationId
         {
             get { return (string)this[appId]; }
@@ -144,7 +238,7 @@ namespace PayPal.Manager
         /// <summary>
         /// API signature
         /// </summary>
-        [ConfigurationProperty("apiSignature")]
+        [ConfigurationProperty(AccountFieldNames.ApiSignature)]
         public string APISignature
         {
             get { return (string)this[apiSignature]; }
@@ -154,7 +248,7 @@ namespace PayPal.Manager
         /// <summary>
         /// Client certificate for SSL authentication
         /// </summary>
-        [ConfigurationProperty("apiCertificate")]
+        [ConfigurationProperty(AccountFieldNames.ApiCertificate)]
         public string APICertificate
         {
             get { return (string)this[apiCertificate]; }
@@ -164,7 +258,7 @@ namespace PayPal.Manager
         /// <summary>
         /// Private key password for SSL authentication
         /// </summary>
-        [ConfigurationProperty("privateKeyPassword")]
+        [ConfigurationProperty(AccountFieldNames.PrivateKeyPassword)]
         public string PrivateKeyPassword
         {
             get { return (string)this[privateKeyPassword]; }
@@ -174,7 +268,7 @@ namespace PayPal.Manager
         /// <summary>
         /// Signature Subject
         /// </summary>
-        [ConfigurationProperty("signatureSubject")]
+        [ConfigurationProperty(AccountFieldNames.SignatureSubject)]
         public string SignatureSubject
         {
             get { return (string)this[signSubject]; }
@@ -184,11 +278,13 @@ namespace PayPal.Manager
         /// <summary>
         /// Certificate Subject
         /// </summary>
-        [ConfigurationProperty("certificateSubject")]
+        [ConfigurationProperty(AccountFieldNames.CertificateSubject)]
         public string CertificateSubject
         {
             get { return (string)this[certifySubject]; }
             set { this[certifySubject] = value; }
         } 
-    }   
+    } 
+
+#endif
 }

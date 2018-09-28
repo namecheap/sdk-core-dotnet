@@ -1,11 +1,39 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
+
 using PayPal.Exception;
 using System.Reflection;
 
+#if NETSTANDARD
+using System.Linq;
+using Microsoft.Extensions.Configuration;
+#endif
+
+
 namespace PayPal.Manager
-{    
+{
+
+    internal static class AccountFieldNames
+    {
+        public const string ApiUsername = "apiUsername";
+
+        public const string ApiPassword = "apiPassword";
+
+        public const string ApplicationId = "applicationId";
+
+        public const string ApiCertificate = "apiCertificate";
+
+        public const string ApiSignature = "apiSignature";
+
+        public const string PrivateKeyPassword = "privateKeyPassword";
+
+        public const string CertificateSubject = "certificateSubject";
+
+        public const string SignatureSubject = "signatureSubject";
+    }
+
     /// <summary>
     /// ConfigManager loads the configuration file and hands out appropriate parameters to application
     /// </summary>
@@ -14,7 +42,7 @@ namespace PayPal.Manager
         /// <summary>
         /// The configValue is readonly as it should not be changed outside constructor (but the content can)
         /// </summary>
-        private readonly Dictionary<string, string> configValues;
+        private Dictionary<string, string> configValues;
 
         private static readonly Dictionary<string, string> defaultConfig;
 
@@ -57,6 +85,42 @@ namespace PayPal.Manager
             }
         }
 
+#if NETSTANDARD || NETSTANDARD2_0
+
+        private readonly ConfigurationLoader _configurationLoader = new ConfigurationLoader();
+
+        /// <summary>
+        /// Private constructor
+        /// </summary>
+        private ConfigManager()
+        {
+            this.configValues  = _configurationLoader.LoadFromJsonFile("appsettings.json", false);
+        }
+
+        /// <summary>
+        /// Loads settings from json file
+        /// </summary>
+        /// <param name="fileName">PayPal configuration file name</param>
+        public void LoadFromJsonFile(string fileName)
+        {
+            lock (syncRoot)
+            {
+                this.configValues = _configurationLoader.LoadFromJsonFile(fileName, true);
+            }
+        }
+
+        /// <summary>
+        /// Loads settings from json file
+        /// </summary>
+        /// <param name="configurationRoot">Loaded configuration root</param>
+        public void LoadFromConfiguration(IConfigurationRoot configurationRoot)
+        {
+            lock (syncRoot)
+            {
+                this.configValues = _configurationLoader.LoadFromConfigurationRoot(configurationRoot);
+            }  
+        }
+#else
         /// <summary>
         /// Private constructor
         /// </summary>
@@ -89,37 +153,40 @@ namespace PayPal.Manager
             foreach (ConfigurationElement element in (ConfigurationElementCollection)paypalConfigSection.GetType().GetProperty("Accounts").GetValue(paypalConfigSection, null))
             {
                 Account account = (Account)element;
+                string keyPrefix = string.Format("account{0}.", index);
+
                 if (!string.IsNullOrEmpty(account.APIUserName))
                 {
-                    this.configValues.Add("account" + index + ".apiUsername", account.APIUserName);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.ApiUsername, account.APIUserName);
                 }
                 if (!string.IsNullOrEmpty(account.APIPassword))
                 {
-                    this.configValues.Add("account" + index + ".apiPassword", account.APIPassword);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.ApiPassword, account.APIPassword);
                 }
                 if (!string.IsNullOrEmpty(account.APISignature))
                 {
-                    this.configValues.Add("account" + index + ".apiSignature", account.APISignature);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.ApiSignature, account.APISignature);
                 }
                 if (!string.IsNullOrEmpty(account.APICertificate))
                 {
-                    this.configValues.Add("account" + index + ".apiCertificate", account.APICertificate);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.ApiCertificate, account.APICertificate);
                 }
                 if (!string.IsNullOrEmpty(account.PrivateKeyPassword))
                 {
-                    this.configValues.Add("account" + index + ".privateKeyPassword", account.PrivateKeyPassword);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.PrivateKeyPassword, account.PrivateKeyPassword);
                 }
                 if (!string.IsNullOrEmpty(account.CertificateSubject))
                 {
-                    this.configValues.Add("account" + index + ".subject", account.CertificateSubject);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.CertificateSubject, account.CertificateSubject);
                 }
                 if (!string.IsNullOrEmpty(account.ApplicationId))
                 {
-                    this.configValues.Add("account" + index + ".applicationId", account.ApplicationId);
+                    this.configValues.Add(keyPrefix + AccountFieldNames.ApplicationId, account.ApplicationId);
                 }
                 index++;
             }
         }
+#endif
 
         /// <summary>
         /// Returns all properties from the config file

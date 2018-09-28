@@ -67,6 +67,13 @@ namespace PayPal
             }
         }
 
+#if NETSTANDARD || NETSTANDARD2_0
+        static IPNMessage()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+#endif
+
         /// <summary>
         /// IPNMessage constructor
         /// </summary>
