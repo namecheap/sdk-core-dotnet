@@ -26,15 +26,6 @@ def getVersionSuffix(branchName) {
 node {
 	def revision
 	def versionSuffix
-	def nugetUsername
-	def nugetPassword
-	
-	stage('GetCredentials') {
-		withCredentials([usernamePassword(credentialsId: 'nc-artifactory', passwordVariable: 'password', usernameVariable: 'username')]) {
-			nugetUsername = username
-			nugetPassword = password
-		}
-	}
 
 	stage('Checkout') {
 		deleteDir()
@@ -63,8 +54,10 @@ node {
 	}
 
 	stage ('Push NuGet package') {
-		buildDockerContainer.inside(''){
-			sh "dotnet nuget push Source/SDK/Package -s ${env.NUGET_REGISTRY_LINK} -k ${nugetUsername}:${nugetPassword}"
+		withCredentials([usernamePassword(credentialsId: 'nc-artifactory', passwordVariable: 'nugetPassword', usernameVariable: 'nugetUsername')]) {
+			buildDockerContainer.inside(''){
+				sh "dotnet nuget push Source/SDK/Package/*.nupkg -s ${env.NUGET_REGISTRY_LINK} -k ${nugetUsername}:${nugetPassword}"
+			}
 		}
 	}
 }
