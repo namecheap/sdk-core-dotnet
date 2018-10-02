@@ -54,11 +54,16 @@ node {
 	}
 
 	stage ('Push NuGet package') {
+		def userName
+		def password
+		
 		withCredentials([usernamePassword(credentialsId: 'nc-artifactory', passwordVariable: 'nugetPassword', usernameVariable: 'nugetUsername')]) {
-			buildDockerContainer.inside(''){
-				sh "dotnet nuget push Source/SDK/Package -s ${env.NUGET_REGISTRY_LINK} -k ${nugetUsername}:${nugetPassword}"
-			}
-			
+			username = nugetUsername
+			password = nugetPassword
+		}
+
+		buildDockerContainer.inside(''){
+			sh "dotnet nuget push Source/SDK/Package -s ${env.NUGET_REGISTRY_LINK} -k ${username}:${password}"
 		}
 	}
 }
