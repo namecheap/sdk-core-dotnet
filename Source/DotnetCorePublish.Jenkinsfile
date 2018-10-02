@@ -53,9 +53,12 @@ node {
 		}
 	}
 
-	//stage ('Push NuGet package') {
-	//	buildDockerContainer.inside(''){
-	//		sh "dotnet nuget push Source/SDK/Package -s ${env.NUGET_REGISTRY_LINK}"
-	//	}
-	//}
+	stage ('Push NuGet package') {
+		withCredentials([usernamePassword(credentialsId: 'nc-artifactory', passwordVariable: 'nugetPassword', usernameVariable: 'nugetUsername')]) {
+			buildDockerContainer.inside(''){
+				sh "dotnet nuget push Source/SDK/Package -s ${env.NUGET_REGISTRY_LINK}" -ApiKey "${nugetUsername}:${nugetPassword}"
+			}
+			
+		}
+	}
 }
